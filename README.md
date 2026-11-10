@@ -1,55 +1,37 @@
-# web-push-server
+# @trysac/web-push-server
 
-[![npm version](https://img.shields.io/npm/v/@trysac/web-push-server.svg)](https://www.npmjs.com/package/@trysac/web-push-server)
-[![license: MIT](https://img.shields.io/npm/l/@trysac/web-push-server.svg)](LICENSE)
-[![CI](https://github.com/Trysac/u916-web-push-server/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u916-web-push-server/actions/workflows/ci.yml)
+Servers that send browser notifications must encrypt every payload, sign a VAPID token, and correctly map HTTP errors for cleanup. Getting the crypto derivation or record padding wrong leads to silently dropped messages, and common alternatives rely on legacy dependencies. This utility implements RFC 8291, RFC 8292, and RFC 8030 using standard WebCrypto (globalThis.crypto.subtle) and fetch, with zero runtime dependencies.
 
-Web Push sender written on WebCrypto: RFC 8291 aes128gcm payload encryption, RFC 8292 VAPID ES256 tokens and RFC 8030 delivery with typed push service errors
+## Installation
 
-## Problem
-
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and why existing
-packages do not solve it well. Keep it factual; link to an issue or decision record when there is one.
-
-## Install
-
-```sh
+```bash
 npm install @trysac/web-push-server
 ```
-
-Requires Node.js 20 or newer. The package ships ES modules with TypeScript declarations.
 
 ## Usage
 
 ```ts
-import { greet } from "@trysac/web-push-server";
+import { generateVapidKeys, sendNotification } from "@trysac/web-push-server";
 
-// Build a greeting; surrounding whitespace is ignored.
-const message = greet("  Ada ");
-console.log(message); // "Hello, Ada!"
-
-try {
-  greet("   ");
-} catch (error) {
-  console.error((error as Error).message); // "name must not be empty"
-}
+const keys = await generateVapidKeys();
+const sub = {
+  endpoint: "https://fcm.googleapis.com/fcm/send/example",
+  keys: { p256dh: "<base64url>", auth: "<base64url>" },
+};
+await sendNotification(sub, "Hello!", { vapid: { subject: "mailto:me@example.com", keys } });
 ```
 
-## API
+## API Summary
 
-| Export | Signature | Description |
-|---|---|---|
-| `greet` | `(name: string) => string` | Placeholder API; replace it with the real one. |
+- **Crypto**: `encryptPayload`, `decryptPayload`, `deriveWebPushKeys`.
+- **VAPID**: `generateVapidKeys`, `createVapidAuthorization`.
+- **Delivery**: `sendNotification`.
+- **Error Handling**: `WebPushError` handles 404/410 (`subscription_gone`), 413 (`payload_too_large`), 429 (`rate_limited`), and 5xx (`push_service_error`) status codes.
 
-## Development
+## Why not `web-push`?
 
-```sh
-npm install
-npm run check   # lint, format, types, tests with coverage, docs, secrets
-```
+Popular alternatives require legacy Node.js cryptographic libraries and third-party JWT dependencies. This utility is built on platform-native WebCrypto, maintains zero runtime dependencies, and verifies its implementation directly against the RFC 8291 and RFC 8292 published test vectors.
 
-See [AGENTS.md](AGENTS.md) for the full command list and [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
+## Security
 
-## License
-
-[MIT](LICENSE) © 2026 Miguel Gomez
+[Security & Threat Model](docs/SECURITY.md)
