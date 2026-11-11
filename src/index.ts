@@ -1,20 +1,41 @@
 /**
- * Public entry point of @trysac/web-push-server.
+ * `@trysac/web-push-server` — Web Push sender built on WebCrypto.
  *
- * Replace this placeholder with the utility's real API. Keep every export documented and covered by tests.
+ * Implements RFC 8291 (`aes128gcm` message encryption), RFC 8292 (VAPID ES256
+ * authorization), and RFC 8030 (HTTP delivery and error mapping) with zero
+ * runtime dependencies.
  */
 
-/**
- * Builds a greeting for `name`.
- *
- * @param name - Who to greet. Surrounding whitespace is ignored.
- * @returns The greeting, for example `"Hello, Ada!"`.
- * @throws {TypeError} When `name` is empty after trimming.
- */
-export function greet(name: string): string {
-  const trimmed = name.trim();
-  if (trimmed === "") {
-    throw new TypeError("name must not be empty");
-  }
-  return `Hello, ${trimmed}!`;
-}
+export {
+  DEFAULT_MAX_PAYLOAD_BYTES,
+  type DerivedKeyMaterial,
+  decryptPayload,
+  deriveWebPushKeys,
+  type EncryptPayloadOptions,
+  encryptPayload,
+  type KeyPair,
+  type ReceiverKeys,
+  type Subscription,
+} from "./crypto.js";
+export {
+  WebPushError,
+  type WebPushErrorCode,
+  type WebPushErrorOptions,
+} from "./errors.js";
+export {
+  DEFAULT_ENDPOINT_HOSTS,
+  DEFAULT_TTL_SECONDS,
+  MAX_TTL_SECONDS,
+  type PushUrgency,
+  type SendNotificationOptions,
+  type SendNotificationResult,
+  sendNotification,
+  type WebPushEvent,
+} from "./send.js";
+export {
+  type CreateVapidAuthorizationOptions,
+  createVapidAuthorization,
+  DEFAULT_VAPID_EXPIRES_IN_SECONDS,
+  generateVapidKeys,
+  MAX_VAPID_EXPIRES_IN_SECONDS,
+} from "./vapid.js";

@@ -1,30 +1,12 @@
 # Architecture
 
-## Overview
+`@trysac/web-push-server` is structured around four focused modules re-exported through `src/index.ts`:
 
-`@trysac/web-push-server` is a small, dependency-free TypeScript library published to npm as ES modules with type
-declarations. Web Push sender written on WebCrypto: RFC 8291 aes128gcm payload encryption, RFC 8292 VAPID ES256 tokens and RFC 8030 delivery with typed push service errors
-
-## Modules
-
-| Module | Responsibility |
-|---|---|
-| `src/index.ts` | Public API. Everything consumers import is exported from here. |
-
-Add a row when you add a module. Internal modules are not re-exported unless they are part of the public API.
-
-## Boundaries
-
-- No runtime dependencies by default; any addition is justified in [STACK.md](STACK.md).
-- No I/O at import time. Functions are pure unless their documentation says otherwise.
-- Errors are thrown as built-in error types (`TypeError`, `RangeError`) with actionable messages.
-
-## Build and distribution
-
-`npm run build` compiles `src/` to `dist/` with `tsconfig.build.json`. Only `dist/` is published
-(`files` in `package.json`).
-
-## Decisions
-
-Architectural decisions are recorded in [decisions/](decisions/), starting with
-[0001](decisions/0001-record-architecture-decisions.md).
+1. **`src/errors.ts`**: Defines `WebPushError` and `WebPushErrorCode`. Enforces a 200-character message limit and strips newlines so no cryptographic material, tokens, or payloads ever appear in error messages.
+2. **`src/base64url.ts`**: Unpadded base64url encoding and strict decoding (tolerating optional `=` padding while verifying canonical trailing bits).
+3. **`src/crypto.ts`**: Implements RFC 8291 (`aes128gcm`) and RFC 8188 single-record framing:
+   - ECDH P-256 shared secret derivation.
+   - HKDF-SHA-256 extraction and expansion (`WebPush: info\0`, `Content-Encoding: aes128gcm\0`, `Content-Encoding: nonce\0`).
+   - AES-128-GCM encryption and decryption with 86-byte header (`salt || rs=4096 || idlen=65 || as_public`).
+4. **`src/vapid.ts`**: Implements RFC 8292 ES256 JWT generation (`{"typ":"JWT","alg":"ES256"}` and claims ordered `aud`, `exp`, `sub`) and `vapid t=<jwt>, k=<publicKey>` formatting.
+5. **`src/send.ts`**: Implements RFC 8030 delivery over `fetch`, SSRF endpoint host allow-listing, header validation (`TTL`, `Urgency`, `Topic`), HTTP status mapping, and sanitized `onEvent` telemetry.
