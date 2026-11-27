@@ -4,9 +4,15 @@ Servers that send browser notifications must encrypt every payload, sign a VAPID
 
 ## Installation
 
-```bash
-npm install @trysac/web-push-server
+Not published to npm yet. Build it from a clone, then install it from the local path:
+
+```sh
+git clone https://github.com/Trysac/u916-web-push-server.git
+cd u916-web-push-server && npm ci && npm run build
+cd ../your-project && npm install ../u916-web-push-server
 ```
+
+Imports keep the package name: `import { ... } from "@trysac/web-push-server"`.
 
 ## Usage
 
